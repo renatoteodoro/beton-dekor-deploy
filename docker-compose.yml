@@ -1,45 +1,58 @@
+version: "3.9"
+
 services:
   db:
     image: postgres:15-alpine
-    container_name: betondekor_db
+    restart: unless-stopped
     environment:
       POSTGRES_DB: betondekor
       POSTGRES_USER: betondekor
       POSTGRES_PASSWORD: betondekor_password
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U betondekor"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   web:
     build: .
-    container_name: betondekor_web
-    command: python manage.py runserver 0.0.0.0:8000
+    restart: unless-stopped
+    command: gunicorn betondekor.wsgi:application --bind 0.0.0.0:8000
     volumes:
-      - .:/app
       - static_volume:/app/staticfiles
       - media_volume:/app/media
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
+    # ports:
+    #   - "8000:8000"
     env_file:
       - .env
     depends_on:
       db:
         condition: service_healthy
     environment:
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_NAME=betondekor
-      - DB_USER=betondekor
-      - DB_PASSWORD=betondekor_password
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: betondekor
+      DB_USER: betondekor
+      DB_PASSWORD: betondekor_password
+
+  nginx:
+    image: nginx:stable-alpine
+    restart: unless-stopped
+    depends_on:
+      - web
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/certbot/www:/var/www/certbot
+      - ./nginx/certbot/conf:/etc/letsencrypt
 
 volumes:
   postgres_data:
   static_volume:
   media_volume:
-
