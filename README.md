@@ -1,81 +1,70 @@
-# Beton Dekor - Projeto Django
+# Beton Dekor
 
-Projeto Django para replicar o design do Figma 100% fielmente.
+Aplicação web em Django desenvolvida e entregue para uma empresa do setor de construção civil. O sistema publica o catálogo de produtos, organiza categorias e subcategorias, recebe contatos e permite que a equipe atualize o conteúdo por uma área administrativa.
 
-## Estrutura do Projeto
+Aplicação em produção: https://betondekor.com.br/
 
+## Funcionalidades
+
+- Catálogo público com categorias, subcategorias e páginas individuais por produto.
+- Cadastro de descrição, dimensões, cores, unidade de venda e especificações.
+- Até três imagens por produto, armazenadas no Cloudinary.
+- Área autenticada para criar, editar, duplicar, ordenar e remover produtos.
+- Gestão de categorias e subcategorias.
+- Formulário de contato com mensagens persistidas para acompanhamento.
+- Interface responsiva baseada no layout aprovado pelo cliente.
+
+## Stack
+
+- Python e Django 6.
+- Django Templates e htmx.
+- PostgreSQL em produção e SQLite como alternativa local.
+- Cloudinary para mídia.
+- Docker Compose, Gunicorn e Nginx.
+- WhiteNoise para arquivos estáticos.
+
+## Arquitetura
+
+```text
+Navegador
+   |
+Nginx
+   |
+Gunicorn + Django
+   |-------- PostgreSQL
+   |-------- Cloudinary
 ```
-Beton Dekor/
-├── betondekor/          # Configurações do projeto Django
-├── core/                # App principal
-├── templates/           # Templates HTML
-│   └── core/
-├── static/              # Arquivos estáticos (CSS, JS, imagens)
-│   ├── css/
-│   ├── js/
-│   └── images/
-├── media/               # Arquivos de mídia enviados pelos usuários
-├── venv/                # Ambiente virtual Python
-├── manage.py
-└── requirements.txt
-```
 
-## Configuração e Instalação
+O domínio principal fica no app `core`. Os modelos `CategoriaPrincipal`, `Subcategoria`, `Produto` e `MensagemContato` sustentam o catálogo e o contato. O deploy em containers separa banco, aplicação e proxy reverso.
 
-### 1. Ativar o ambiente virtual
+## Execução local com Docker
 
-**Windows (PowerShell):**
-```powershell
-.\venv\Scripts\Activate.ps1
-```
+1. Copie `.env.example` para `.env` e preencha as variáveis.
+2. Inicie os serviços:
 
-**Windows (CMD):**
-```cmd
-venv\Scripts\activate.bat
-```
-
-**Linux/Mac:**
 ```bash
-source venv/bin/activate
+docker compose up --build
 ```
 
-### 2. Instalar dependências
+3. Aplique as migrações e crie um usuário administrativo:
 
 ```bash
+docker compose exec web python manage.py migrate
+docker compose exec web python manage.py createsuperuser
+```
+
+A aplicação fica disponível em `http://localhost`.
+
+## Execução local com Python
+
+```bash
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-```
-
-### 3. Executar migrações (quando necessário)
-
-```bash
 python manage.py migrate
-```
-
-### 4. Criar superusuário (opcional)
-
-```bash
-python manage.py createsuperuser
-```
-
-### 5. Executar servidor de desenvolvimento
-
-```bash
 python manage.py runserver
 ```
 
-O projeto estará disponível em: http://127.0.0.1:8000/
+## Estado
 
-## Próximos Passos
-
-Para replicar 100% o design do Figma, preciso de:
-1. Acesso ao arquivo Figma (pode ser necessário configurar token de API)
-2. Screenshots do design
-3. Detalhes sobre cores, fontes, espaçamentos e componentes
-
-## Notas
-
-- O projeto está configurado para desenvolvimento
-- Arquivos estáticos estão configurados em `static/`
-- Templates estão em `templates/`
-- O foco atual é no frontend (backend será implementado depois)
-
+O site público está em produção. Este repositório contém a aplicação Django e os arquivos usados no deploy; credenciais reais são fornecidas por variáveis de ambiente e não devem ser versionadas.
